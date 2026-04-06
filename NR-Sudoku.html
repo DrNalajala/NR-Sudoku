@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>✨ 6x6 Sudoku • Whistle Finish • Mobile Ready ✨</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e2b2c, #0f1a1f);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 16px;
+    }
+
+    .game-wrapper {
+      background: rgba(255, 250, 235, 0.97);
+      border-radius: 48px;
+      padding: 18px 16px 24px;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255,255,200,0.8);
+      width: 100%;
+      max-width: 650px;
+    }
+
+    .top-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .timer-area {
+      background: #2c3e2f;
+      border-radius: 50px;
+      padding: 5px 16px;
+      color: #f9efcf;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      box-shadow: inset 0 -2px 0 #1f2a1f, 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .stage-buttons {
+      display: flex;
+      gap: 8px;
+      background: #e8ddc7;
+      padding: 5px 12px;
+      border-radius: 60px;
+    }
+
+    .stage-btn {
+      background: #f5e5c8;
+      border: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+      width: 44px;
+      border-radius: 40px;
+      padding: 5px 0;
+      cursor: pointer;
+      transition: 0.1s linear;
+      box-shadow: 0 2px 0 #b2946e;
+      font-family: inherit;
+      color: #3e2a1f;
+    }
+
+    .stage-btn.active {
+      background: #f5b042;
+      color: white;
+      box-shadow: 0 1px 0 #7e582e;
+      transform: translateY(1px);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      background: #6c4e3a;
+      border: none;
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding: 5px 14px;
+      border-radius: 40px;
+      color: #fff0da;
+      cursor: pointer;
+      transition: 0.1s;
+      box-shadow: 0 2px 0 #3f2c1f;
+      font-family: inherit;
+    }
+
+    .action-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 0px 0 #3f2c1f;
+    }
+
+    .tip-btn {
+      background: #3f7e6b;
+      box-shadow: 0 2px 0 #235a4a;
+    }
+
+    .sound-btn {
+      background: #5e8b6f;
+      box-shadow: 0 2px 0 #2c5a44;
+    }
+
+    .completion-badge {
+      background: #26805c;
+      padding: 4px 12px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #f9f1cf;
+      white-space: nowrap;
+    }
+
+    .sudoku-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      background-color: #4a3729;
+      border: 3px solid #2f241b;
+      border-radius: 20px;
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      margin: 12px 0;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .cell {
+      background-color: #fffcf0;
+      border: 1px solid #cfbfa0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cell[data-box="0"], .cell[data-box="2"], .cell[data-box="4"] {
+      background-color: #fff7e8;
+    }
+    .cell[data-box="1"], .cell[data-box="3"], .cell[data-box="5"] {
+      background-color: #fcf0dc;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      font-family: 'Courier New', 'Segoe UI', monospace;
+      color: #1f4d2e;
+      outline: none;
+      cursor: pointer;
+      padding: 0;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+
+    /* Larger touch target on mobile */
+    .cell input {
+      font-size: clamp(1.2rem, 7vw, 2rem);
+    }
+
+    .cell input:focus {
+      background: #fff2cf;
+      box-shadow: inset 0 0 0 2px #f6b352;
+    }
+
+    .cell input[readonly] {
+      color: #2c6e42;
+      font-weight: 800;
+      background-color: #eadfc9;
+      text-shadow: 0 0 1px #e7cfa1;
+      cursor: default;
+    }
+
+    /* SPARKLE animation */
+    .sparkle-effect {
+      animation: sparkleFlash 0.55s ease-out forwards;
+      position: relative;
+      z-index: 5;
+    }
+
+    @keyframes sparkleFlash {
+      0% { background: radial-gradient(circle at 30% 30%, #ffeaac, #fcd48d); box-shadow: 0 0 0px #ffd966; }
+      30% { background: radial-gradient(circle at 70% 40%, #fff0b5, #ffbe5e); box-shadow: 0 0 18px 4px #ffdd88; transform: scale(1.01);}
+      100% { background: inherit; box-shadow: none; transform: scale(1);}
+    }
+
+    .sparkle-effect::after {
+      content: "✨";
+      position: absolute;
+      font-size: 1.3rem;
+      top: -6px;
+      right: -4px;
+      opacity: 0;
+      animation: flyTwinkle 0.55s forwards;
+      pointer-events: none;
+    }
+
+    @keyframes flyTwinkle {
+      0% { opacity: 0; transform: translateY(0) rotate(0deg);}
+      25% { opacity: 1; transform: translateY(-8px) rotate(15deg);}
+      80% { opacity: 0.8; transform: translateY(-18px) rotate(25deg);}
+      100% { opacity: 0; transform: translateY(-26px) rotate(40deg);}
+    }
+
+    .tip-message {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: #ebdfc9;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 5px 14px;
+      border-radius: 30px;
+      color: #2b5a3a;
+    }
+
+    .footer-message {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #5b4a36;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .date-display {
+      background: #d9cdb0;
+      padding: 2px 12px;
+      border-radius: 30px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #2c4b32;
+    }
+
+    /* Mobile improvements */
+    @media (max-width: 550px) {
+      .game-wrapper {
+        padding: 12px 12px 20px;
+      }
+      .timer-area {
+        font-size: 1.2rem;
+        padding: 3px 12px;
+      }
+      .stage-btn {
+        width: 38px;
+        font-size: 1rem;
+      }
+      .action-btn {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+      }
+      .completion-badge {
+        font-size: 0.65rem;
+        padding: 3px 8px;
+      }
+      .tip-message {
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrapper">
+  <div class="top-panel">
+    <div class="timer-area">⏱️ <span id="timerDisplay">00:00</span></div>
+    <div class="stage-buttons" id="stageButtons">
+      <button class="stage-btn" data-stage="1">1★</button>
+      <button class="stage-btn" data-stage="2">2★</button>
+      <button class="stage-btn" data-stage="3">3★</button>
+      <button class="stage-btn" data-stage="4">4★</button>
+    </div>
+    <div class="action-buttons">
+      <button class="action-btn" id="newGameBtn">🔄 New</button>
+      <button class="action-btn tip-btn" id="tipBtn">💡 Tip</button>
+      <button class="action-btn sound-btn" id="enableSoundBtn">🔊 Sound</button>
+      <div class="completion-badge" id="completionMsg">⚡ playing</div>
+    </div>
+  </div>
+
+  <div class="sudoku-grid" id="sudokuGrid"></div>
+  <div id="tipMessage" class="tip-message">✨ Tap Tip for a hint ✨</div>
+  <div class="footer-message">
+    <span>🎵 Tap "Sound" first (required)</span>
+    <span class="date-display" id="dateDisplay"></span>
+  </div>
+</div>
+
+<script>
+  // ------------------- SOUND SYSTEM (mobile friendly) -------------------
+  let audioCtx = null;
+  let soundEnabled = false;
+
+  function initAndEnableSound() {
+    if (audioCtx && audioCtx.state === 'running') {
+      soundEnabled = true;
+      tipMessageDiv.innerHTML = "🔊 Sound on! Whistle at finish ✨";
+      setTimeout(() => {
+        if (!gameCompleted) tipMessageDiv.innerHTML = "✨ Tap Tip for a hint ✨";
+      }, 1800);
+      return;
+    }
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx.resume().then(() => {
+        soundEnabled = true;
+        tipMessageDiv.innerHTML = "🔊 Sound enabled! Whistle on victory!";
+        setTimeout(() => {
+          if (!gameCompleted) tipMessageDiv.innerHTML = "✨ Tap Tip for a hint ✨";
+        }, 1800);
+      }).catch(e => {
+        tipMessageDiv.innerHTML = "⚠️ Tap again to enable sound";
+      });
+    } catch(e) {
+      tipMessageDiv.innerHTML = "❌ Audio not supported";
+    }
+  }
+
+  function playBeep(frequency, duration, volume = 0.2) {
+    if (!soundEnabled || !audioCtx || audioCtx.state !== 'running') return;
+    try {
+      const now = audioCtx.currentTime;
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.00001, now + duration);
+      oscillator.start();
+      oscillator.stop(now + duration);
+    } catch(e) {}
+  }
+
+  // Whistle sound: high-pitched sine wave with downward pitch bend
+  function playWhistle() {
+    if (!soundEnabled || !audioCtx || audioCtx.state !== 'running') return;
+    try {
+      const now = audioCtx.currentTime;
+      const oscillator = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      oscillator.connect(gain);
+      gain.connect(audioCtx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(1700, now);
+      oscillator.frequency.exponentialRampToValueAtTime(1100, now + 0.28);
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.38);
+      oscillator.start();
+      oscillator.stop(now + 0.38);
+    } catch(e) {}
+  }
+
+  function playCompletionSound(type) {
+    if (!soundEnabled || !audioCtx || audioCtx.state !== 'running') return;
+    if (type === 'rowcol') {
+      playBeep(880, 0.13, 0.14);
+      setTimeout(() => playBeep(1100, 0.1, 0.12), 90);
+    } else if (type === 'final') {
+      playWhistle();
+    }
+  }
+
+  // ------------------- GAME CONSTANTS -------------------
+  const SIZE = 6;
+  const BOX_ROWS = 2;
+  const BOX_COLS = 3;
+  
+  const MASTER_SOLVED = [
+    [1, 2, 3, 4, 5, 6],
+    [4, 5, 6, 1, 2, 3],
+    [2, 3, 1, 5, 6, 4],
+    [5, 6, 4, 2, 3, 1],
+    [3, 1, 5, 6, 4, 2],
+    [6, 4, 2, 3, 1, 5]
+  ];
+
+  const PUZZLE_EASY = [
+    [1, 2, 0, 4, 5, 6],
+    [4, 5, 6, 0, 2, 3],
+    [2, 3, 1, 5, 6, 4],
+    [0, 6, 4, 2, 3, 1],
+    [3, 1, 5, 6, 4, 2],
+    [6, 4, 2, 3, 1, 5]
+  ];
+  const PUZZLE_MEDIUM = [
+    [1, 0, 3, 0, 5, 6],
+    [0, 5, 0, 1, 0, 3],
+    [2, 0, 1, 5, 0, 4],
+    [0, 6, 4, 0, 3, 1],
+    [3, 1, 0, 6, 4, 0],
+    [6, 0, 2, 0, 1, 5]
+  ];
+  const PUZZLE_HARD = [
+    [1, 0, 0, 4, 0, 0],
+    [0, 5, 0, 0, 2, 0],
+    [0, 0, 1, 0, 0, 4],
+    [0, 0, 4, 0, 0, 1],
+    [0, 1, 0, 0, 4, 0],
+    [0, 0, 2, 0, 0, 5]
+  ];
+  const PUZZLE_EXPERT = [
+    [1, 0, 0, 0, 0, 0],
+    [0, 0, 6, 0, 0, 0],
+    [0, 0, 0, 5, 0, 0],
+    [0, 0, 4, 0, 0, 0],
+    [0, 0, 0, 0, 4, 0],
+    [0, 0, 0, 0, 0, 5]
+  ];
+
+  const stagePuzzles = { 1: PUZZLE_EASY, 2: PUZZLE_MEDIUM, 3: PUZZLE_HARD, 4: PUZZLE_EXPERT };
+  let currentStage = 2;    
+  let gameCompleted = false;   
+  
+  let boardData = [];       
+  let readOnlyMask = [];    
+  let timerSeconds = 0;
+  let timerInterval = null;
+  let isTimerActive = true;   
+  
+  let rowCompletedFlag = new Array(SIZE).fill(false);
+  let colCompletedFlag = new Array(SIZE).fill(false);
+  let boxCompletedFlag = new Array(6).fill(false);
+  
+  const gridContainer = document.getElementById("sudokuGrid");
+  const timerDisplaySpan = document.getElementById("timerDisplay");
+  const completionMsgSpan = document.getElementById("completionMsg");
+  const tipMessageDiv = document.getElementById("tipMessage");
+  
+  function setDateDisplay() {
+    const dateElem = document.getElementById("dateDisplay");
+    if (dateElem) {
+      const now = new Date();
+      const formatted = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+      dateElem.textContent = `📅 ${formatted}`;
+    }
+  }
+  
+  function getBoxIndex(row, col) {
+    return Math.floor(row / BOX_ROWS) * (SIZE / BOX_COLS) + Math.floor(col / BOX_COLS);
+  }
+  
+  function getBoxCells(boxIdx) {
+    const cells = [];
+    const startRow = Math.floor(boxIdx / (SIZE / BOX_COLS)) * BOX_ROWS;
+    const startCol = (boxIdx % (SIZE / BOX_COLS)) * BOX_COLS;
+    for (let i = 0; i < BOX_ROWS; i++)
+      for (let j = 0; j < BOX_COLS; j++)
+        cells.push({ row: startRow + i, col: startCol + j });
+    return cells;
+  }
+  
+  function isRowFullyCorrect(row) {
+    const values = [];
+    for (let c = 0; c < SIZE; c++) {
+      let val = boardData[row][c];
+      if (!val && val !== 0) return false;
+      let num = parseInt(val, 10);
+      if (isNaN(num) || num < 1 || num > 6) return false;
+      values.push(num);
+    }
+    return new Set(values).size === SIZE;
+  }
+  
+  function isColumnFullyCorrect(col) {
+    const values = [];
+    for (let r = 0; r < SIZE; r++) {
+      let val = boardData[r][col];
+      if (!val && val !== 0) return false;
+      let num = parseInt(val, 10);
+      if (isNaN(num) || num < 1 || num > 6) return false;
+      values.push(num);
+    }
+    return new Set(values).size === SIZE;
+  }
+  
+  function isBoxFullyCorrect(boxIdx) {
+    const cells = getBoxCells(boxIdx);
+    const values = [];
+    for (const { row, col } of cells) {
+      let val = boardData[row][col];
+      if (!val && val !== 0) return false;
+      let num = parseInt(val, 10);
+      if (isNaN(num) || num < 1 || num > 6) return false;
+      values.push(num);
+    }
+    return new Set(values).size === SIZE;
+  }
+  
+  function isGameFullyComplete() {
+    for (let r = 0; r < SIZE; r++) if (!isRowFullyCorrect(r)) return false;
+    for (let c = 0; c < SIZE; c++) if (!isColumnFullyCorrect(c)) return false;
+    for (let b = 0; b < 6; b++) if (!isBoxFullyCorrect(b)) return false;
+    return true;
+  }
+  
+  function sparkleRow(rowIdx) {
+    document.querySelectorAll(`.cell[data-row='${rowIdx}']`).forEach(cell => {
+      cell.classList.add("sparkle-effect");
+      setTimeout(() => cell.classList.remove("sparkle-effect"), 600);
+    });
+  }
+  function sparkleColumn(colIdx) {
+    document.querySelectorAll(`.cell[data-col='${colIdx}']`).forEach(cell => {
+      cell.classList.add("sparkle-effect");
+      setTimeout(() => cell.classList.remove("sparkle-effect"), 600);
+    });
+  }
+  function sparkleBox(boxIdx) {
+    document.querySelectorAll(`.cell[data-box='${boxIdx}']`).forEach(cell => {
+      cell.classList.add("sparkle-effect");
+      setTimeout(() => cell.classList.remove("sparkle-effect"), 600);
+    });
+  }
+  
+  function updateCompletionsAndSparkle() {
+    if (gameCompleted) return;
+    let anyNew = false;
+    for (let r = 0; r < SIZE; r++) {
+      let now = isRowFullyCorrect(r);
+      if (now && !rowCompletedFlag[r]) { sparkleRow(r); rowCompletedFlag[r] = true; anyNew = true; }
+      else if (!now && rowCompletedFlag[r]) rowCompletedFlag[r] = false;
+    }
+    for (let c = 0; c < SIZE; c++) {
+      let now = isColumnFullyCorrect(c);
+      if (now && !colCompletedFlag[c]) { sparkleColumn(c); colCompletedFlag[c] = true; anyNew = true; }
+      else if (!now && colCompletedFlag[c]) colCompletedFlag[c] = false;
+    }
+    for (let b = 0; b < 6; b++) {
+      let now = isBoxFullyCorrect(b);
+      if (now && !boxCompletedFlag[b]) { sparkleBox(b); boxCompletedFlag[b] = true; anyNew = true; }
+      else if (!now && boxCompletedFlag[b]) boxCompletedFlag[b] = false;
+    }
+    if (anyNew) playCompletionSound('rowcol');
+    
+    if (isGameFullyComplete() && !gameCompleted) {
+      gameCompleted = true;
+      isTimerActive = false;
+      if (timerInterval) clearInterval(timerInterval);
+      const finalTime = formatTime(timerSeconds);
+      completionMsgSpan.innerHTML = `🏆 COMPLETE! ${finalTime} 🏆`;
+      tipMessageDiv.innerHTML = "🎉 Puzzle solved! Whistle sound! 🎉";
+      playCompletionSound('final');
+      for (let i = 0; i < SIZE; i++) sparkleRow(i);
+      for (let i = 0; i < SIZE; i++) sparkleColumn(i);
+      for (let i = 0; i < 6; i++) sparkleBox(i);
+    }
+  }
+  
+  function giveTip() {
+    if (gameCompleted) {
+      tipMessageDiv.innerHTML = "Game finished! Start New Game.";
+      setTimeout(() => { if(!gameCompleted) tipMessageDiv.innerHTML = "✨ Tap Tip for a hint ✨"; }, 2000);
+      return;
+    }
+    const emptyCells = [];
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        if (!readOnlyMask[r][c] && (boardData[r][c] === "" || boardData[r][c] === null)) {
+          emptyCells.push({ row: r, col: c });
+        }
+      }
+    }
+    if (emptyCells.length === 0) {
+      tipMessageDiv.innerHTML = "No empty cells! Complete the puzzle!";
+      if (isGameFullyComplete() && !gameCompleted) updateCompletionsAndSparkle();
+      return;
+    }
+    const rand = Math.floor(Math.random() * emptyCells.length);
+    const { row, col } = emptyCells[rand];
+    const correct = MASTER_SOLVED[row][col];
+    boardData[row][col] = correct.toString();
+    const inputEl = document.querySelector(`.cell[data-row='${row}'][data-col='${col}'] input`);
+    if (inputEl) inputEl.value = correct;
+    tipMessageDiv.innerHTML = `💡 Tip: Cell (${row+1},${col+1}) → ${correct}`;
+    setTimeout(() => {
+      if (!gameCompleted) tipMessageDiv.innerHTML = "✨ Tap Tip for another hint ✨";
+    }, 2000);
+    updateCompletionsAndSparkle();
+  }
+  
+  function renderGrid() {
+    gridContainer.innerHTML = "";
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const boxId = getBoxIndex(r, c);
+        let value = boardData[r][c] === "" || boardData[r][c] === null ? "" : boardData[r][c];
+        const isFixed = readOnlyMask[r][c];
+        
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.setAttribute("data-row", r);
+        cell.setAttribute("data-col", c);
+        cell.setAttribute("data-box", boxId);
+        
+        const input = document.createElement("input");
+        input.type = "text";
+        input.inputMode = "numeric";
+        input.maxLength = 1;
+        input.value = value;
+        if (isFixed) input.readOnly = true;
+        
+        // auto-select entire content on focus (easy overwrite)
+        input.addEventListener("focus", function() { this.select(); });
+        
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")
+            e.preventDefault();
+        });
+        
+        input.addEventListener("input", (function(row, col) {
+          return function(e) {
+            if (gameCompleted) return;
+            let val = e.target.value.trim();
+            if (val === "") {
+              if (!readOnlyMask[row][col]) {
+                e.target.value = "";
+                boardData[row][col] = "";
+                updateCompletionsAndSparkle();
+              } else e.target.value = boardData[row][col];
+              return;
+            }
+            let num = parseInt(val, 10);
+            if (!isNaN(num) && num >= 1 && num <= 6 && val.length === 1) {
+              if (!readOnlyMask[row][col]) {
+                e.target.value = num.toString();
+                boardData[row][col] = num.toString();
+                updateCompletionsAndSparkle();
+              } else {
+                e.target.value = boardData[row][col];
+              }
+            } else {
+              e.target.value = boardData[row][col] === "" ? "" : boardData[row][col];
+            }
+          };
+        })(r, c));
+        
+        cell.appendChild(input);
+        gridContainer.appendChild(cell);
+      }
+    }
+  }
+  
+  function loadStagePuzzle(stage) {
+    const puzzle = stagePuzzles[stage];
+    const newBoard = Array(SIZE).fill().map(() => Array(SIZE).fill(""));
+    const newReadOnly = Array(SIZE).fill().map(() => Array(SIZE).fill(false));
+    for (let i = 0; i < SIZE; i++) {
+      for (let j = 0; j < SIZE; j++) {
+        if (puzzle[i][j] !== 0) {
+          newBoard[i][j] = puzzle[i][j].toString();
+          newReadOnly[i][j] = true;
+        }
+      }
+    }
+    boardData = newBoard;
+    readOnlyMask = newReadOnly;
+    rowCompletedFlag.fill(false);
+    colCompletedFlag.fill(false);
+    boxCompletedFlag.fill(false);
+    gameCompleted = false;
+    isTimerActive = true;
+    completionMsgSpan.innerHTML = "⚡ playing";
+    tipMessageDiv.innerHTML = "✨ Tap Tip for a hint ✨";
+    renderGrid();
+    // initial flags (no sparkles)
+    for (let r = 0; r < SIZE; r++) rowCompletedFlag[r] = isRowFullyCorrect(r);
+    for (let c = 0; c < SIZE; c++) colCompletedFlag[c] = isColumnFullyCorrect(c);
+    for (let b = 0; b < 6; b++) boxCompletedFlag[b] = isBoxFullyCorrect(b);
+    if (isGameFullyComplete() && !gameCompleted) {
+      gameCompleted = true;
+      isTimerActive = false;
+      if (timerInterval) clearInterval(timerInterval);
+      completionMsgSpan.innerHTML = `🏆 COMPLETE! ${formatTime(timerSeconds)} 🏆`;
+    }
+  }
+  
+  function formatTime(sec) {
+    return `${Math.floor(sec / 60).toString().padStart(2,'0')}:${(sec % 60).toString().padStart(2,'0')}`;
+  }
+  
+  function updateTimerDisplay() {
+    timerDisplaySpan.textContent = formatTime(timerSeconds);
+  }
+  
+  function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (isTimerActive && !gameCompleted) {
+        timerSeconds++;
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+  
+  function resetTimerValue() {
+    timerSeconds = 0;
+    updateTimerDisplay();
+    isTimerActive = true;
+    gameCompleted = false;
+    if (timerInterval) clearInterval(timerInterval);
+    startTimer();
+  }
+  
+  function newGame() {
+    loadStagePuzzle(currentStage);
+    resetTimerValue();
+    gameCompleted = false;
+    isTimerActive = true;
+    completionMsgSpan.innerHTML = "⚡ playing";
+    tipMessageDiv.innerHTML = "✨ New game! Tap Tip for hint ✨";
+    setTimeout(() => updateCompletionsAndSparkle(), 10);
+  }
+  
+  function setStage(stageNum) {
+    currentStage = stageNum;
+    loadStagePuzzle(currentStage);
+    resetTimerValue();
+    gameCompleted = false;
+    isTimerActive = true;
+    completionMsgSpan.innerHTML = "⚡ playing";
+    tipMessageDiv.innerHTML = `⭐ Stage ${stageNum} started. Good luck! ⭐`;
+    document.querySelectorAll('.stage-btn').forEach(btn => {
+      if (parseInt(btn.dataset.stage) === stageNum) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    setTimeout(() => updateCompletionsAndSparkle(), 10);
+  }
+  
+  function init() {
+    setDateDisplay();
+    document.getElementById("enableSoundBtn").addEventListener("click", () => initAndEnableSound());
+    document.querySelectorAll('.stage-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let s = parseInt(btn.dataset.stage);
+        if (!isNaN(s) && s !== currentStage) setStage(s);
+      });
+    });
+    document.getElementById("newGameBtn").addEventListener("click", () => newGame());
+    document.getElementById("tipBtn").addEventListener("click", () => giveTip());
+    setStage(2);
+    startTimer();
+  }
+  
+  init();
+</script>
+</body>
+</html>
